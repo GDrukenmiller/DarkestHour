@@ -470,7 +470,7 @@ simulated function PhysicsVolumeChange(PhysicsVolume NewVolume)
 
 defaultproperties
 {
-    StaticMesh=StaticMesh'DH_WeaponPickups.Ammo.m34_throw'
+    StaticMesh=StaticMesh'DH_M34_stc.Ammo.m34_throw'
     Speed=1100.0
     bOrientToVelocity=true
     LifeSpan=10.0          // used in case the grenade fails to detonate on impact (will lie around for a bit for effect, then disappear)
