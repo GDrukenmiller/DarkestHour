@@ -7,7 +7,7 @@ class DH_KorovinAttachment extends DHHighROFWeaponAttachment;
 
 defaultproperties
 {
-    Mesh=SkeletalMesh'DH_Weapons3rd_anm.korovin_3rd'
+    Mesh=SkeletalMesh'DH_Korovin_3rd.korovin_3rd'
     MenuImage=Texture'DH_InterfaceArt_tex.weapon_icons.korovin_icon'
     mMuzFlashClass=class'ROEffects.MuzzleFlash3rdPPSH'
     ROShellCaseClass=class'ROAmmo.RO3rdShellEject762x25mm'
