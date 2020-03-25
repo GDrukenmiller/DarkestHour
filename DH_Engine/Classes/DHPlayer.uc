@@ -228,6 +228,7 @@ simulated event PostBeginPlay()
 
     super.PostBeginPlay();
 
+    // NOTE: This is old, believe I this was added to enforce the highest quality voice codec possible.
     VoiceChatCodec = "CODEC_96WB";
 
     // Make this only run by the owning client
