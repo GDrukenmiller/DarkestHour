@@ -8,10 +8,95 @@
 
 class DH_ShermanTank_M4A3E8 extends DH_ShermanTank_M4A376W;
 
+var StaticMesh LogsLeftStaticMesh;
+var StaticMesh LogsRightStaticMesh;
+var DHDestroyableStaticMesh LogsLeft;
+var DHDestroyableStaticMesh LogsRight;
+
+var array<Actor> Attachments;
+
+simulated function PostBeginPlay()
+{
+    super.PostBeginPlay();
+
+    CreateAttachments();
+}
+
+exec function BreakLogs(string Side)
+{
+    if (Role == ROLE_Authority)
+    {
+        if (Side ~= "L" && LogsLeft != none)
+        {
+            LogsLeft.BreakMe();
+        }
+        else if (Side ~= "R" && LogsRight != none)
+        {
+            LogsRight.BreakMe();
+        }
+    }
+}
+
+// In the movie, Fury has some protective logs that absorb a Panzerfaust strike
+// at one point, but then fall off as a result. Our Fury will do the same!
+simulated function CreateAttachments()
+{
+    if (Role == ROLE_Authority)
+    {
+        // Left logs
+        LogsLeft = Spawn(class'DHDestroyableStaticMesh', self);
+
+        if (LogsLeft != none)
+        {
+            LogsLeft.DestroyedEmitterClass = class'DH_Effects.DHFuryLogsLeftEmitter';
+            LogsLeft.SetStaticMesh(LogsLeftStaticMesh);
+            AttachToBone(LogsLeft, 'body');
+            Attachments[Attachments.Length] = LogsLeft;
+        }
+
+        // Right logs
+        LogsRight = Spawn(class'DHDestroyableStaticMesh', self);
+
+        if (LogsRight != none)
+        {
+            LogsRight.SetStaticMesh(LogsRightStaticMesh);
+            LogsRight.DestroyedEmitterClass = class'DH_Effects.DHFuryLogsRightEmitter';
+            AttachToBone(LogsRight, 'body');
+            Attachments[Attachments.Length] = LogsRight;
+        }
+    }
+}
+
+function Died(Controller Killer, class<DamageType> DamageType, vector HitLocation)
+{
+    super.Died(Killer, DamageType, HitLocation);
+
+    // TODO: i don't think this gets run on the client?
+    DestroyAttachments();
+}
+
+simulated function DestroyAttachments()
+{
+    local int i;
+
+    super.DestroyAttachments();
+
+    for (i = 0; i < Attachments.Length; ++i)
+    {
+        if (Attachments[i] != none)
+        {
+            Attachments[i].Destroy();
+        }
+    }
+}
+
 defaultproperties
 {
     Mesh=SkeletalMesh'DH_ShermanM4A3E8_anm.body_ext'
-    VehicleNameString="Sherman M4A3E8 "
+    VehicleNameString="Sherman M4A3E8"
+
+    LogsLeftStaticMesh=StaticMesh'DH_ShermanM4A3E8_stc.body.logs_L'
+    LogsRightStaticMesh=StaticMesh'DH_ShermanM4A3E8_stc.body.logs_R'
 
     VehicleHudImage=Texture'DH_ShermanM4A3E8_tex.Menu.body'
     VehicleHudTurret=TexRotator'DH_ShermanM4A3E8_tex.Menu.turret_look'
@@ -56,6 +141,11 @@ defaultproperties
 
     DestroyedVehicleMesh=StaticMesh'DH_ShermanM4A3E8_stc.Destroyed.m4a3e8_destroyed'
 
+    VehHitpoints(0)=(PointRadius=30.0,PointOffset=(X=-90.0,Z=60.0)) // engine
+    VehHitpoints(1)=(PointRadius=20.0,PointScale=1.0,PointBone="body",PointOffset=(X=-15.0,Y=25.0,Z=70.0),DamageMultiplier=3.0,HitPointType=HP_AmmoStore)
+    VehHitpoints(2)=(PointRadius=20.0,PointScale=1.0,PointBone="body",PointOffset=(X=-15.0,Y=-25.0,Z=70.0),DamageMultiplier=3.0,HitPointType=HP_AmmoStore)
+    VehHitpoints(3)=(PointRadius=25.0,PointScale=1.0,PointBone="body",PointOffset=(Z=65.0),DamageMultiplier=5.0,HitPointType=HP_AmmoStore)
+
     LeftWheelBones(0)="wheel.L.001"
     LeftWheelBones(1)="wheel.L.002"
     LeftWheelBones(2)="wheel.L.003"
@@ -86,13 +176,33 @@ defaultproperties
     FireAttachBone="driver_attachment"
     FireEffectOffset=(X=0,Y=-10,Z=50)
 
+    Begin Object Class=KarmaParamsRBFull Name=KParams0
+        KInertiaTensor(0)=1.0
+        KInertiaTensor(3)=3.0
+        KInertiaTensor(5)=3.0
+        KCOMOffset=(X=0,Y=0,Z=-0.5)
+        KLinearDamping=0.05
+        KAngularDamping=0.05
+        KStartEnabled=true
+        bKNonSphericalInertia=true
+        KMaxAngularSpeed=0.9 // default is 1.0
+        bHighDetailOnly=false
+        bClientOnly=false
+        bKDoubleTickRate=true
+        bDestroyOnWorldPenetrate=true
+        bDoSafetime=true
+        KFriction=0.5
+        KImpactThreshold=700.0
+    End Object
+    KParams=KarmaParamsRBFull'DH_Vehicles.DH_ShermanTank_M4A3E8.KParams0'
+
     // Physics wheels
     Begin Object Class=SVehicleWheel Name=LF_Steering
         bPoweredWheel=true
         SteerType=VST_Steered
         BoneName="steer.L.F"
         BoneRollAxis=AXIS_Y
-        WheelRadius=32.0
+        WheelRadius=31.0
         bLeftTrack=true
     End Object
     Wheels(0)=SVehicleWheel'DH_Vehicles.DH_ShermanTank_M4A3E8.LF_Steering'
@@ -101,7 +211,7 @@ defaultproperties
         SteerType=VST_Steered
         BoneName="steer.R.F"
         BoneRollAxis=AXIS_Y
-        WheelRadius=32.0
+        WheelRadius=31.0
     End Object
     Wheels(1)=SVehicleWheel'DH_Vehicles.DH_ShermanTank_M4A3E8.RF_Steering'
     Begin Object Class=SVehicleWheel Name=LR_Steering
@@ -109,7 +219,7 @@ defaultproperties
         SteerType=VST_Inverted
         BoneName="steer.L.B"
         BoneRollAxis=AXIS_Y
-        WheelRadius=32.0
+        WheelRadius=31.0
         bLeftTrack=true
     End Object
     Wheels(2)=SVehicleWheel'DH_Vehicles.DH_ShermanTank_M4A3E8.LR_Steering'
@@ -118,14 +228,14 @@ defaultproperties
         SteerType=VST_Inverted
         BoneName="steer.R.B"
         BoneRollAxis=AXIS_Y
-        WheelRadius=32.0
+        WheelRadius=31.0
     End Object
     Wheels(3)=SVehicleWheel'DH_Vehicles.DH_ShermanTank_M4A3E8.RR_Steering'
     Begin Object Class=SVehicleWheel Name=Left_Drive_Wheel
         bPoweredWheel=true
         BoneName="drive.L"
         BoneRollAxis=AXIS_Y
-        WheelRadius=32.0
+        WheelRadius=31.0
         bLeftTrack=true
     End Object
     Wheels(4)=SVehicleWheel'DH_Vehicles.DH_ShermanTank_M4A3E8.Left_Drive_Wheel'
@@ -133,7 +243,7 @@ defaultproperties
         bPoweredWheel=true
         BoneName="drive.R"
         BoneRollAxis=AXIS_Y
-        WheelRadius=32.0
+        WheelRadius=31.0
     End Object
     Wheels(5)=SVehicleWheel'DH_Vehicles.DH_ShermanTank_M4A3E8.Right_Drive_Wheel'
 }

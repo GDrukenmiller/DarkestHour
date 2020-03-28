@@ -191,11 +191,10 @@ simulated function SpawnExplosionEffects(vector HitLocation, vector HitNormal, o
     // Hit a vehicle - set hit effects and play a suppression/shell shock effect for vehicle occupants
     if (ROVehicle(SavedHitActor) != none)
     {
+        //VehicleShellShockEffect();
         HitSound = VehicleHitSound;
         HitEmitterClass = ShellHitVehicleEffectClass;
-        //BlurTime = 8.0;
-        //BlurEffectScalar = 8.0;
-        //PlayOwnedSound(Sound'DH_SundrySounds.shell_shock.shellshock', SLOT_Interface, 1.0);
+        PlayOwnedSound(Sound'DH_SundrySounds.shell_shock.shellshock', SLOT_None, 1.0, true, 10.0, 1.0, true);
     }
     // Hit something else - get material type & set effects
     else if (!(PhysicsVolume != none && PhysicsVolume.bWaterVolume))
@@ -239,6 +238,12 @@ simulated function SpawnExplosionEffects(vector HitLocation, vector HitNormal, o
             case EST_Water:
                 HitSound = WaterHitSound; // added as can't see why not (no duplication with CheckForSplash water effects as here we aren't in a WaterVolume)
                 HitEmitterClass = ShellHitWaterEffectClass;
+                break;
+
+            case EST_Metal:
+            case EST_MetalArmor:
+                HitSound = VehicleDeflectSound;
+                HitEmitterClass = ShellDeflectEffectClass;
                 break;
 
             default:
